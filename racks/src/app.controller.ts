@@ -10,8 +10,8 @@ export class AppController {
     return this.appService.getStatus(query);
   }
 
-  /* @Post()
-  postHello(): string {
-    // return this.appService.getHello();
-  } */
+  @Post('lock')
+  postHello(@Query() query) {
+    return this.appService.changeStatus(query);
+  }
 }
