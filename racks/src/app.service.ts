@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { response } from 'express';
 const axios = require('axios');
 const fs = require('fs');
-let timeInterval = 5; // in secon
+let timeInterval = 10; // in secon
 const defaultGateway = require('default-gateway');
 
 @Injectable()
@@ -60,14 +61,16 @@ export class AppService {
               auth: 'Groc3R@Sm@rtR@ck',
             },
           },
+          
         );
+        console.log(response);
         const allData = response.data;
         allData.forEach(async (obj) => {
           const fileData = fs.readFileSync('./src/device_ips.json', 'utf8');
           const device_ips = JSON.parse(fileData);
           const device_ip = device_ips[obj['compartment']];
 
-          const getValuesUrl = `http://${device_ip}/racks?code=${obj['code']}&var1=123`;
+          const getValuesUrl = `http://${device_ip}/racks?code=${obj['code']}&state=${obj['boxstate']}`;
           try {
             const response = await axios.post(getValuesUrl);
             return response.data;

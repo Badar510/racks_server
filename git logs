@@ -1,0 +1,4 @@
+git fetch -a
+git checkout method1
+git pull
+
