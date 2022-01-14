@@ -30,35 +30,42 @@ export class AppService {
         if (err) throw err;
       });
     }
-    let ctr = 2;
-    const { gateway } = await defaultGateway.v4();
-    const gatewayArray = gateway.split('.');
-    const array = [
-      'A',
-      'B',
-      'C',
-      'D'
-    ];
-    const numbericLength: number = 16;
-    let jsonStr = '{';
-    for (let i = 0; i < array.length; i++) {
-      for (let j = 1; j <= numbericLength; j++) {
-        jsonStr += `"${array[i]}-${j.toString().padStart(2, '0')}": "${gatewayArray[0]
-          }.${gatewayArray[1]}.${gatewayArray[2]}.${ctr}"`;
-        if (!(i == array.length - 1 && j == numbericLength)) {
-          jsonStr += `,`;
+    try {
+      let ctr = 2;
+      const { gateway } = await defaultGateway.v4();
+      const gatewayArray = gateway.split('.');
+      const array = [
+        'A',
+        'B',
+        'C',
+        'D'
+      ];
+      const numbericLength: number = 16;
+      let jsonStr = '{';
+      for (let i = 0; i < array.length; i++) {
+        for (let j = 1; j <= numbericLength; j++) {
+          jsonStr += `"${array[i]}-${j.toString().padStart(2, '0')}": "${gatewayArray[0]
+            }.${gatewayArray[1]}.${gatewayArray[2]}.${ctr}"`;
+          if (!(i == array.length - 1 && j == numbericLength)) {
+            jsonStr += `,`;
+          }
+          // console.log(
+          //   `"${array[i]}-0${j}": "${gatewayArray[0]}.${gatewayArray[1]}.${gatewayArray[2]}.${ctr}",`,
+          // );
+          ctr++;
         }
-        // console.log(
-        //   `"${array[i]}-0${j}": "${gatewayArray[0]}.${gatewayArray[1]}.${gatewayArray[2]}.${ctr}",`,
-        // );
-        ctr++;
       }
+      jsonStr += '}';
+      await fs.writeFile('./device_ips.json', jsonStr, async (err) => {
+        if (err) throw err;
+        return this.initializeTask();
+      });
+    } catch (err) {
+      console.log(err);
+      foreignApiLimiter
+        .schedule(() => this.serverInitialize())
+        .then();
     }
-    jsonStr += '}';
-    await fs.writeFile('./device_ips.json', jsonStr, async (err) => {
-      if (err) throw err;
-      return this.initializeTask();
-    });
   }
 
   async initializeTask() {
@@ -75,7 +82,7 @@ export class AppService {
       if (response) {
         let responseCtr: number = 0;
         response.forEach(async (data) => {
-          //  console.log('response', data);
+          // console.log('response', data);
           const newCompartment = data['compartment'];
           const newCode = data['code'];
           const newBoxstate = data['boxstate'];
@@ -190,6 +197,9 @@ export class AppService {
       return response.data;
     } catch (err) {
       console.log(err);
+      foreignApiLimiter
+        .schedule(() => this.initializeTask())
+        .then();
       return false;
     }
   }
