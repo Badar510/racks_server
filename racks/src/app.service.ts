@@ -14,7 +14,7 @@ const foreignApiLimiter = new Bottleneck({
   minTime: 5000,
 });
 const foreignApi: string =
-  'https://api.airliftgrocer.com/v2/orders/packed/compartments?warehouse=239';
+  'https://api.airliftgrocer.com/v2/orders/packed/compartments?warehouse=508';
 
 @Injectable()
 export class AppService {
