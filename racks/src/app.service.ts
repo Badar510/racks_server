@@ -10,13 +10,7 @@ export class AppService {
   constructor(
     @InjectModel('rack-schema') private readonly racksModel,
   ) {
-    this.patchCompartmentStates();
-  }
-
-  async tempFunc() {
-
-    console.log('working ');
-
+    // this.patchCompartmentStates();
   }
 
   async getCompartmentData(compartment) {
@@ -78,9 +72,8 @@ export class AppService {
 
 
   // Cron Jobs
-
-
-  @Cron("*/2 * * * * *")
+  // One minute
+  @Cron("* * * * *")
   async patchCompartmentStates() {
     const allData = await this.racksModel.find().exec();
     const compartmentsStatusArray = [];
@@ -103,10 +96,10 @@ export class AppService {
         });
       }
     });
-    console.log(compartmentsStatusArray);
+    // console.log(compartmentsStatusArray);
 
     try {
-      const response = await axios.put('https://api.airliftgrocer.com/compartment/status', {
+      const response = await axios.patch('https://api.airliftgrocer.com/compartment/warehouses/tags/status:', {
         headers: {
           auth: 'Groc3R@Sm@rtR@ck',
         },
@@ -119,11 +112,10 @@ export class AppService {
     } catch (err) {
       console.log(err.response.status);
     }
-
   }
 
-
-  // @Cron("*/15 * * * * *")
+  //15 Seconds to check if any compartment is active or inactive
+  @Cron("*/15 * * * * *")
   async updateCompartments() {
     const currentDate = moment();
     const allData = await this.racksModel.find().exec();
@@ -139,21 +131,12 @@ export class AppService {
         element.status = false;
       }
       await element.save();
-      console.log(element);
+      // console.log(element);
     });
   }
 
 
-  async deleteAllLocalData() {
-    const allData = await this.racksModel.find().exec();
-    allData.forEach(element => {
-      element.delete();
-    });
-    console.log(allData);
-  }
-
-
-  // @Cron("*/5 * * * * *")
+  @Cron("*/5 * * * * *")
   async pullCloudData() {
     try {
       const response = await axios.get('https://api.airliftgrocer.com/v2/orders/packed/compartments?warehouse=' + warehouseId, {
@@ -170,7 +153,7 @@ export class AppService {
           compartmentObj.duration = eachData['duration'];
           compartmentObj.boxstate = eachData['boxstate'];
           await compartmentObj.save();
-          console.log('Updated');
+          // console.log('Updated');
         } else {
           const data = new this.racksModel({
             compartment: eachData['compartment'],
@@ -180,7 +163,7 @@ export class AppService {
             boxstate: eachData['boxstate']
           });
           await data.save();
-          console.log('Created new');
+          // console.log('Created new');
         }
       });
       return response.data;
