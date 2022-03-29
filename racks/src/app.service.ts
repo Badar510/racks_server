@@ -73,7 +73,7 @@ export class AppService {
 
   // Cron Jobs
   // One minute
-  @Cron("* * * * *")
+  // @Cron("* * * * *")
   async patchCompartmentStates() {
     const allData = await this.racksModel.find().exec();
     const compartmentsStatusArray = [];
