@@ -5,5 +5,12 @@ export class CompartmentDataDto {
 
 export class UpdateStateDto {
     compartment?: string;
-    boxstate?: string;
+    Astate1: string;
+    Astate2: string;
+    Bstate1: string;
+    Bstate2: string;
+    Cstate1: string;
+    Cstate2: string;
+    Dstate1: string;
+    Dstate2: string;
 }

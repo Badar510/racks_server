@@ -21,6 +21,10 @@ export class AppService {
         compartmentObj.lastSeen = currentDate;
         compartmentObj.status = true;
         await compartmentObj.save();
+        if (compartmentObj.compartment == "A-01") {
+          // compartmentObj.boxstate = "F";
+          // console.log(compartmentObj);
+        }
         return compartmentObj;
       }
       return "Compartment Not Found";
@@ -30,46 +34,85 @@ export class AppService {
   }
 
   async updateState(updateStateDto) {
-    const compartmentObj = await this.racksModel.findOne({ compartment: updateStateDto.compartment }).exec();
-    if (compartmentObj) {
-      const currentDate = moment();
-      compartmentObj.boxstate = updateStateDto.boxstate;
-      compartmentObj.lastSeen = currentDate;
-      compartmentObj.status = true;
-      await compartmentObj.save();
-    }
+    const compartmentLength = updateStateDto.compartment.split("-").length;
+    const boxChar = updateStateDto.compartment.split("-")[0];
+    const boxNum = updateStateDto.compartment.split("-")[1];
+    console.log(compartmentLength);
+    if (compartmentLength < 2) {
 
-    let status = "";
-    if (updateStateDto.boxstate == "R") {
-      status = "available";
-    } else if (updateStateDto.boxstate == "L") {
-      status = "occupied";
-    } else if (updateStateDto.boxstate == "F") {
-      status = "unlocked";
     } else {
-      return "";
+      let status = "";
+      switch (boxChar) {
+        case "A":
+          status = await this.getBoxState(updateStateDto.Astate1, updateStateDto.Astate2);
+          break;
+        case "B":
+          status = await this.getBoxState(updateStateDto.Bstate1, updateStateDto.Bstate2);
+          break;
+        case "C":
+          status = await this.getBoxState(updateStateDto.Cstate1, updateStateDto.Cstate2);
+          break;
+        case "D":
+          status = await this.getBoxState(updateStateDto.Dstate1, updateStateDto.Dstate2);
+          break;
+      }
+      if (status) {
+        const compartmentObj = await this.racksModel.findOne({ compartment: updateStateDto.compartment }).exec();
+        if (compartmentObj) {
+          const currentDate = moment();
+          compartmentObj.boxstate = updateStateDto.boxstate;
+          compartmentObj.lastSeen = currentDate;
+          compartmentObj.status = true;
+          await compartmentObj.save();
+        }
+        this.putApiCall(updateStateDto.compartment, status);
+      }
     }
-    try {
-      const response = await axios.put('https://api.airliftgrocer.com/compartment/status', {
-        headers: {
-          auth: 'Groc3R@Sm@rtR@ck',
-        },
-        data: {
-          warehouseId: warehouseId,
-          rack: updateStateDto.compartment,
-          status: status,
-          byAdmin: true
-        },
-      });
 
-      return response.data;
-    } catch (err) {
-      console.log(err.response.status);
-    }
   }
 
+  async getBoxState(state1, state2) {
+    let status = "";
+    if (state1 == "0" && state2 == "0") {
+      status = "occupied";
+    } else if (state1 == "1") {
+      status = "unlocked";
+    } else if (state2 == "1") {
+      status = "available";
+    } else {
+      status = "";
+    }
+    return status;;
+  }
 
-
+  async putApiCall(compartment, status) {
+    const options = {
+      url: 'https://doqaapi.grocery.rideairlift.com/compartment/status',
+      method: 'PUT',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json;charset=UTF-8',
+        auth: 'Groc3R@Sm@rtR@ck',
+      },
+      data: {
+        "warehouseId": "202",
+        "rack": compartment,
+        "status": status,
+        "byAdmin": false
+      },
+    };
+    axios(options)
+      .then(response => {
+        // console.log(response);
+        console.log("Event log Success: compartment " + compartment + " updated PUT API");
+        return "Updated";
+      })
+      .catch(err => {
+        console.error("Event log Error: PUT API");
+        console.log(err.response.data);
+        return err;
+      });
+  }
 
   // Cron Jobs
   // One minute
@@ -96,26 +139,34 @@ export class AppService {
         });
       }
     });
-    // console.log(compartmentsStatusArray);
-
-    try {
-      const response = await axios.patch('https://api.airliftgrocer.com/compartment/warehouses/tags/status:', {
+    console.log(compartmentsStatusArray);
+    if (compartmentsStatusArray && compartmentsStatusArray.length) {
+      const options = {
+        url: 'https://doqaapi.grocery.rideairlift.com/compartment/warehouses/tags/status',
+        method: 'PATCH',
         headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json;charset=UTF-8',
           auth: 'Groc3R@Sm@rtR@ck',
         },
         data: {
           compartmentsStatusArray: compartmentsStatusArray
         },
-      });
-
-      return response.data;
-    } catch (err) {
-      console.log(err.response.status);
+      };
+      axios(options)
+        .then(response => {
+          // console.log(response);
+          return "Updated";
+        })
+        .catch(err => {
+          console.log(err.response.data);
+          return err;
+        });
     }
   }
 
   //15 Seconds to check if any compartment is active or inactive
-  @Cron("*/15 * * * * *")
+  @Cron("*/60 * * * * *")
   async updateCompartments() {
     const currentDate = moment();
     const allData = await this.racksModel.find().exec();
@@ -124,7 +175,7 @@ export class AppService {
         const lastSeen = moment(element.lastSeen);
         // console.log(currentDate.diff(lastSeen, 'seconds'));
         const lastSeenDiff = currentDate.diff(lastSeen, 'seconds');
-        if (lastSeenDiff > 15) {
+        if (lastSeenDiff > 60) {
           element.status = false;
         }
       } else {
@@ -135,7 +186,6 @@ export class AppService {
     });
   }
 
-
   @Cron("*/5 * * * * *")
   async pullCloudData() {
     try {
@@ -144,28 +194,31 @@ export class AppService {
           auth: 'Groc3R@Sm@rtR@ck',
         },
       });
-
-      response.data.forEach(async eachData => {
-        const compartmentObj = await this.racksModel.findOne({ compartment: eachData['compartment'] }).exec();
-        if (compartmentObj) {
-          compartmentObj.code = eachData['code'];
-          compartmentObj.time = eachData['time'];
-          compartmentObj.duration = eachData['duration'];
-          compartmentObj.boxstate = eachData['boxstate'];
-          await compartmentObj.save();
-          // console.log('Updated');
-        } else {
-          const data = new this.racksModel({
-            compartment: eachData['compartment'],
-            code: eachData['code'],
-            time: eachData['time'],
-            duration: eachData['duration'],
-            boxstate: eachData['boxstate']
-          });
-          await data.save();
-          // console.log('Created new');
-        }
-      });
+      if (response.data && response.data.length) {
+        response.data.forEach(async eachData => {
+          const compartmentObj = await this.racksModel.findOne({ compartment: eachData['compartment'] }).exec();
+          if (compartmentObj) {
+            compartmentObj.code = eachData['code'];
+            compartmentObj.time = eachData['time'];
+            compartmentObj.duration = eachData['duration'];
+            compartmentObj.boxstate = eachData['boxstate'];
+            await compartmentObj.save();
+            // console.log('Updated');
+          } else {
+            const data = new this.racksModel({
+              compartment: eachData['compartment'],
+              code: eachData['code'],
+              time: eachData['time'],
+              duration: eachData['duration'],
+              boxstate: eachData['boxstate']
+            });
+            await data.save();
+            // console.log('Created new');
+          }
+        });
+      } else {
+        console.log("No Data Retured from cloud API");
+      }
       return response.data;
     } catch (err) {
       console.log(err);
