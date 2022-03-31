@@ -37,10 +37,12 @@ export class AppService {
     const compartmentLength = updateStateDto.compartment.split("-").length;
     const boxChar = updateStateDto.compartment.split("-")[0];
     const boxNum = updateStateDto.compartment.split("-")[1];
-    console.log(compartmentLength);
-    if (compartmentLength < 2) {
 
+
+    if (compartmentLength < 2) {
+      //This section is to detect if the compartments are on fresh start then in future they will send all the states of switches, we can syncs them with server
     } else {
+      //This section is when a change of state is detected like opening a locker, then we can update the state on server.
       let status = "";
       switch (boxChar) {
         case "A":
@@ -56,7 +58,11 @@ export class AppService {
           status = await this.getBoxState(updateStateDto.Dstate1, updateStateDto.Dstate2);
           break;
       }
-      if (status) {
+      console.log("Event Change Detect, Compartment: " + updateStateDto.compartment);
+      console.log(updateStateDto.Astate1, updateStateDto.Astate2, status);
+
+      // status = "available";
+      if (status && boxChar == "A") {
         const compartmentObj = await this.racksModel.findOne({ compartment: updateStateDto.compartment }).exec();
         if (compartmentObj) {
           const currentDate = moment();
@@ -98,18 +104,18 @@ export class AppService {
         "warehouseId": "202",
         "rack": compartment,
         "status": status,
-        "byAdmin": false
+        "byAdmin": true
       },
     };
     axios(options)
       .then(response => {
         // console.log(response);
-        console.log("Event log Success: compartment " + compartment + " updated PUT API");
+        console.log("Event log Success: compartment " + compartment + " updated PUT API, Status: " + status);
         return "Updated";
       })
       .catch(err => {
         console.error("Event log Error: PUT API");
-        console.log(err.response.data);
+        // console.log(err.responses);
         return err;
       });
   }
@@ -221,7 +227,8 @@ export class AppService {
       }
       return response.data;
     } catch (err) {
-      console.log(err);
+      console.error("Cannot Pull Latest Data");
+      // console.log(err);
     }
   }
 }
