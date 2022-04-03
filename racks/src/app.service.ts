@@ -171,7 +171,7 @@ export class AppService {
     }
   }
 
-  //15 Seconds to check if any compartment is active or inactive
+  //60 Seconds to check if any compartment is active or inactive
   @Cron("*/60 * * * * *")
   async updateCompartments() {
     const currentDate = moment();
@@ -192,7 +192,7 @@ export class AppService {
     });
   }
 
-  @Cron("*/5 * * * * *")
+  @Cron("*/10 * * * * *")
   async pullCloudData() {
     try {
       const response = await axios.get('https://api.airliftgrocer.com/v2/orders/packed/compartments?warehouse=' + warehouseId, {
