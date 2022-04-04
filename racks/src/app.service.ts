@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { HttpException } from '@nestjs/common';
 const axios = require('axios').default;
 import moment = require('moment');
 const warehouseId = "386";
 import { Cron } from '@nestjs/schedule';
-
+let internetDown = false;
 @Injectable()
 export class AppService {
   constructor(
@@ -14,22 +15,26 @@ export class AppService {
   }
 
   async getCompartmentData(compartment) {
-    try {
-      const compartmentObj = await this.racksModel.findOne({ compartment: compartment }).exec();
-      if (compartmentObj) {
-        const currentDate = moment();
-        compartmentObj.lastSeen = currentDate;
-        compartmentObj.status = true;
-        await compartmentObj.save();
-        if (compartmentObj.compartment == "A-01") {
-          // compartmentObj.boxstate = "F";
-          // console.log(compartmentObj);
+    if (internetDown) {
+      throw new HttpException({}, 408);
+    } else {
+      try {
+        const compartmentObj = await this.racksModel.findOne({ compartment: compartment }).exec();
+        if (compartmentObj) {
+          const currentDate = moment();
+          compartmentObj.lastSeen = currentDate;
+          compartmentObj.status = true;
+          await compartmentObj.save();
+          if (compartmentObj.compartment == "A-01") {
+            // compartmentObj.boxstate = "F";
+            // console.log(compartmentObj);
+          }
+          return compartmentObj;
         }
-        return compartmentObj;
+        return "Compartment Not Found";
+      } catch (e) {
+        return e.message;
       }
-      return "Compartment Not Found";
-    } catch (e) {
-      return e.message;
     }
   }
 
@@ -192,7 +197,7 @@ export class AppService {
     });
   }
 
-  @Cron("*/10 * * * * *")
+  @Cron("*/5 * * * * *")
   async pullCloudData() {
     try {
       const response = await axios.get('https://api.airliftgrocer.com/v2/orders/packed/compartments?warehouse=' + warehouseId, {
@@ -201,6 +206,7 @@ export class AppService {
         },
       });
       if (response.data && response.data.length) {
+        internetDown = false;
         response.data.forEach(async eachData => {
           const compartmentObj = await this.racksModel.findOne({ compartment: eachData['compartment'] }).exec();
           if (compartmentObj) {
@@ -227,6 +233,7 @@ export class AppService {
       }
       return response.data;
     } catch (err) {
+      internetDown = true;
       console.error("Cannot Pull Latest Data");
       // console.log(err);
     }
