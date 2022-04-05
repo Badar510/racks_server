@@ -137,8 +137,9 @@ export class AppService {
   }
 
   // Cron Jobs
+  
   // One minute
-  // @Cron("* * * * *")
+  @Cron("* * * * *")
   async patchCompartmentStates() {
     if (!AppService.warehouseId) {
       console.log("No WareHouse ID is defined, please define WareHouse ID through API.");
