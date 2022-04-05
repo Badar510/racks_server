@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { HttpException } from '@nestjs/common';
 const axios = require('axios').default;
 import moment = require('moment');
-const warehouseId = "386";
+import { warehouseId } from './configs';
 import { Cron } from '@nestjs/schedule';
 let internetDown = false;
 @Injectable()
@@ -106,7 +106,7 @@ export class AppService {
         auth: 'Groc3R@Sm@rtR@ck',
       },
       data: {
-        "warehouseId": "202",
+        "warehouseId": warehouseId,
         "rack": compartment,
         "status": status,
         "byAdmin": true
@@ -150,7 +150,6 @@ export class AppService {
         });
       }
     });
-    console.log(compartmentsStatusArray);
     if (compartmentsStatusArray && compartmentsStatusArray.length) {
       const options = {
         url: 'https://doqaapi.grocery.rideairlift.com/compartment/warehouses/tags/status',
@@ -186,7 +185,7 @@ export class AppService {
         const lastSeen = moment(element.lastSeen);
         // console.log(currentDate.diff(lastSeen, 'seconds'));
         const lastSeenDiff = currentDate.diff(lastSeen, 'seconds');
-        if (lastSeenDiff > 60) {
+        if (lastSeenDiff > 59) {
           element.status = false;
         }
       } else {
