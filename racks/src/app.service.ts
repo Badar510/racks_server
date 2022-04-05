@@ -3,15 +3,25 @@ import { InjectModel } from '@nestjs/mongoose';
 import { HttpException } from '@nestjs/common';
 const axios = require('axios').default;
 import moment = require('moment');
-import { warehouseId } from './configs';
 import { Cron } from '@nestjs/schedule';
 let internetDown = false;
+const fs = require('fs');
+
 @Injectable()
 export class AppService {
+  static warehouseId: string;
   constructor(
     @InjectModel('rack-schema') private readonly racksModel,
-  ) {
-    // this.patchCompartmentStates();
+  ) { this.initializeServer(); }
+  async initializeServer() {
+    try {
+      let configs = await fs.readFileSync('./configs.json', 'utf8');
+      configs = JSON.parse(configs);
+      AppService.warehouseId = configs["warehouseId"];
+      console.log("Server Started, WareHouse ID: " + configs["warehouseId"]);
+    } catch (err) {
+      console.log("No WareHouse ID is defined, please define WareHouse ID through API.");
+    }
   }
 
   async getCompartmentData(compartment) {
@@ -63,8 +73,8 @@ export class AppService {
           status = await this.getBoxState(updateStateDto.Dstate1, updateStateDto.Dstate2);
           break;
       }
-      console.log("Event Change Detect, Compartment: " + updateStateDto.compartment);
-      console.log(updateStateDto.Astate1, updateStateDto.Astate2, status);
+      // console.log("Event Change Detect, Compartment: " + updateStateDto.compartment);
+      // console.log(updateStateDto.Astate1, updateStateDto.Astate2, status);
 
       // status = "available";
       if (status && boxChar == "A") {
@@ -82,21 +92,22 @@ export class AppService {
 
   }
 
-  async getBoxState(state1, state2) {
-    let status = "";
-    if (state1 == "0" && state2 == "0") {
-      status = "occupied";
-    } else if (state1 == "1") {
-      status = "unlocked";
-    } else if (state2 == "1") {
-      status = "available";
-    } else {
-      status = "";
+  async changeWarehouseId(warehouseId) {
+    if (!warehouseId) {
+      throw new HttpException({ message: "Please provide warehouseId in query params." }, 400);
     }
-    return status;;
+    await fs.writeFile('./configs.json', '{"warehouseId":' + warehouseId + '}', (err) => {
+      if (err) throw err;
+    });
+    AppService.warehouseId = warehouseId;
+    return "WareHouse ID changed successfully!";
   }
 
   async putApiCall(compartment, status) {
+    if (!AppService.warehouseId) {
+      console.log("No WareHouse ID is defined, please define WareHouse ID through API.");
+      return;
+    }
     const options = {
       url: 'https://doqaapi.grocery.rideairlift.com/compartment/status',
       method: 'PUT',
@@ -106,7 +117,7 @@ export class AppService {
         auth: 'Groc3R@Sm@rtR@ck',
       },
       data: {
-        "warehouseId": warehouseId,
+        "warehouseId": AppService.warehouseId,
         "rack": compartment,
         "status": status,
         "byAdmin": true
@@ -129,6 +140,10 @@ export class AppService {
   // One minute
   // @Cron("* * * * *")
   async patchCompartmentStates() {
+    if (!AppService.warehouseId) {
+      console.log("No WareHouse ID is defined, please define WareHouse ID through API.");
+      return;
+    }
     const allData = await this.racksModel.find().exec();
     const compartmentsStatusArray = [];
     allData.forEach(element => {
@@ -144,7 +159,7 @@ export class AppService {
       }
       if (element.status) {
         compartmentsStatusArray.push({
-          warehouseId: warehouseId,
+          warehouseId: AppService.warehouseId,
           rack: element.compartment,
           status: status
         });
@@ -198,8 +213,12 @@ export class AppService {
 
   @Cron("*/5 * * * * *")
   async pullCloudData() {
+    if (!AppService.warehouseId) {
+      console.log("No WareHouse ID is defined, please define WareHouse ID through API.");
+      return;
+    }
     try {
-      const response = await axios.get('https://api.airliftgrocer.com/v2/orders/packed/compartments?warehouse=' + warehouseId, {
+      const response = await axios.get('https://api.airliftgrocer.com/v2/orders/packed/compartments?warehouse=' + AppService.warehouseId, {
         headers: {
           auth: 'Groc3R@Sm@rtR@ck',
         },
@@ -236,5 +255,21 @@ export class AppService {
       console.error("Cannot Pull Latest Data");
       // console.log(err);
     }
+  }
+
+  async getBoxState(state1, state2) {
+    let status = "";
+    if (state1 == "0" && state2 == "0") {
+      status = "occupied";
+    } else if (state1 == "1" && state2 == "0") {
+      status = "unlocked";
+    } else if (state2 == "0" && state2 == "1") {
+      status = "available";
+    } else if (state2 == "1" && state2 == "1") {
+      status = "hack";
+    } else {
+      status = "";
+    }
+    return status;;
   }
 }

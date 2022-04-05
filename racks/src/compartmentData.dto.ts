@@ -14,3 +14,7 @@ export class UpdateStateDto {
     Dstate1: string;
     Dstate2: string;
 }
+
+export class WarehouseIdDto {
+    warehouseId: string;
+}
