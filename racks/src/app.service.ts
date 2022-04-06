@@ -235,6 +235,7 @@ export class AppService {
         headers: {
           auth: 'Groc3R@Sm@rtR@ck',
         },
+        timeout: 4000,
       });
       if (response.data && response.data.length) {
         internetDown = false;
