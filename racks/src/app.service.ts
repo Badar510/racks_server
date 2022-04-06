@@ -14,6 +14,12 @@ export class AppService {
     @InjectModel('rack-schema') private readonly racksModel,
   ) { this.initializeServer(); }
   async initializeServer() {
+    //Clearing prev stored data
+    const allData = await this.racksModel.find().exec();    
+    allData.forEach(async element => {
+      await element.delete();
+    });
+    
     try {
       let configs = await fs.readFileSync('./configs.json', 'utf8');
       configs = JSON.parse(configs);
@@ -36,8 +42,8 @@ export class AppService {
           compartmentObj.status = true;
           await compartmentObj.save();
           // if (compartmentObj.compartment == "B-02") {
-            // compartmentObj.boxstate = "F";
-            // console.log(compartmentObj);
+          // compartmentObj.boxstate = "F";
+          // console.log(compartmentObj);
           // }
           return compartmentObj;
         }
