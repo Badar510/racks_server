@@ -35,10 +35,10 @@ export class AppService {
           compartmentObj.lastSeen = currentDate;
           compartmentObj.status = true;
           await compartmentObj.save();
-          if (compartmentObj.compartment == "B-02") {
+          // if (compartmentObj.compartment == "B-02") {
             // compartmentObj.boxstate = "F";
-            console.log(compartmentObj);
-          }
+            // console.log(compartmentObj);
+          // }
           return compartmentObj;
         }
         console.log("Compartment Not Found");
