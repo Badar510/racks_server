@@ -15,11 +15,11 @@ export class AppService {
   ) { this.initializeServer(); }
   async initializeServer() {
     //Clearing prev stored data
-    const allData = await this.racksModel.find().exec();    
+    const allData = await this.racksModel.find().exec();
     allData.forEach(async element => {
       await element.delete();
     });
-    
+
     try {
       let configs = await fs.readFileSync('./configs.json', 'utf8');
       configs = JSON.parse(configs);
@@ -45,9 +45,11 @@ export class AppService {
           // compartmentObj.boxstate = "F";
           // console.log(compartmentObj);
           // }
+          // console.log(compartment);
+
           return compartmentObj;
         }
-        console.log("Compartment Not Found");
+        //console.log("Compartment Not Found");
         return "Compartment Not Found";
       } catch (e) {
         console.log("Err");
@@ -274,9 +276,9 @@ export class AppService {
       status = "occupied";
     } else if (state1 == "1" && state2 == "0") {
       status = "unlocked";
-    } else if (state2 == "0" && state2 == "1") {
+    } else if (state1 == "0" && state2 == "1") {
       status = "available";
-    } else if (state2 == "1" && state2 == "1") {
+    } else if (state1 == "1" && state2 == "1") {
       status = "hack";
     } else {
       status = "";
