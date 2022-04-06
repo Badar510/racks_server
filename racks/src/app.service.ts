@@ -12,7 +12,7 @@ export class AppService {
   static warehouseId: string;
   constructor(
     @InjectModel('rack-schema') private readonly racksModel,
-  ) { this.initializeServer(); }
+  ) { this.initializeServer(); this.patchCompartmentStates() }
   async initializeServer() {
     //Clearing prev stored data
     const allData = await this.racksModel.find().exec();
@@ -69,30 +69,33 @@ export class AppService {
       //This section is to detect if the compartments are on fresh start then in future they will send all the states of switches, we can syncs them with server
     } else {
       //This section is when a change of state is detected like opening a locker, then we can update the state on server.
-      let status = "";
+      let boxStatesObj = { status: "", boxstate: "" };
+      console.log(updateStateDto.compartment);
       switch (boxChar) {
         case "A":
-          status = await this.getBoxState(updateStateDto.Astate1, updateStateDto.Astate2);
+          boxStatesObj = await this.getBoxState(updateStateDto.Astate1, updateStateDto.Astate2);
           break;
         case "B":
-          status = await this.getBoxState(updateStateDto.Bstate1, updateStateDto.Bstate2);
+          boxStatesObj = await this.getBoxState(updateStateDto.Bstate1, updateStateDto.Bstate2);
           break;
         case "C":
-          status = await this.getBoxState(updateStateDto.Cstate1, updateStateDto.Cstate2);
+          boxStatesObj = await this.getBoxState(updateStateDto.Cstate1, updateStateDto.Cstate2);
           break;
         case "D":
-          status = await this.getBoxState(updateStateDto.Dstate1, updateStateDto.Dstate2);
+          boxStatesObj = await this.getBoxState(updateStateDto.Dstate1, updateStateDto.Dstate2);
           break;
       }
-      // console.log("Event Change Detect, Compartment: " + updateStateDto.compartment);
-      // console.log(updateStateDto.Astate1, updateStateDto.Astate2, status);
+      const status = boxStatesObj.status;
+      const boxstate = boxStatesObj.boxstate;
+      console.log(status, boxstate);
 
-      // status = "available";
-      if (status && boxChar == "A") {
+      console.log("--------------------------");
+
+      if (status) {
         const compartmentObj = await this.racksModel.findOne({ compartment: updateStateDto.compartment }).exec();
         if (compartmentObj) {
           const currentDate = moment();
-          compartmentObj.boxstate = updateStateDto.boxstate;
+          compartmentObj.boxstate = boxstate;
           compartmentObj.lastSeen = currentDate;
           compartmentObj.status = true;
           await compartmentObj.save();
@@ -128,7 +131,7 @@ export class AppService {
         auth: 'Groc3R@Sm@rtR@ck',
       },
       data: {
-        "warehouseId": AppService.warehouseId,
+        "warehouseId": String(AppService.warehouseId),
         "rack": compartment,
         "status": status,
         "byAdmin": true
@@ -142,7 +145,7 @@ export class AppService {
       })
       .catch(err => {
         console.error("Event log Error: PUT API");
-        // console.log(err.responses);
+        console.log(err.response.data);
         return err;
       });
   }
@@ -171,12 +174,14 @@ export class AppService {
       }
       if (element.status) {
         compartmentsStatusArray.push({
-          warehouseId: AppService.warehouseId,
+          warehouseId: String(AppService.warehouseId),
           rack: element.compartment,
           status: status
         });
       }
     });
+    console.log(compartmentsStatusArray);
+
     if (compartmentsStatusArray && compartmentsStatusArray.length) {
       const options = {
         url: 'https://doqaapi.grocery.rideairlift.com/compartment/warehouses/tags/status',
@@ -192,6 +197,7 @@ export class AppService {
       };
       axios(options)
         .then(response => {
+          console.log("Patch API Success");
           // console.log(response);
           return "Updated";
         })
@@ -231,7 +237,7 @@ export class AppService {
       return;
     }
     try {
-      const response = await axios.get('https://api.airliftgrocer.com/v2/orders/packed/compartments?warehouse=' + AppService.warehouseId, {
+      const response = await axios.get('https://api.airliftgrocer.com/v2/orders/packed/compartments?warehouse=' + String(AppService.warehouseId), {
         headers: {
           auth: 'Groc3R@Sm@rtR@ck',
         },
@@ -272,18 +278,22 @@ export class AppService {
   }
 
   async getBoxState(state1, state2) {
+    console.log(state1, state2);
     let status = "";
+    let boxstate = "";
     if (state1 == "0" && state2 == "0") {
       status = "occupied";
+      boxstate = "L";
     } else if (state1 == "1" && state2 == "0") {
       status = "unlocked";
+      boxstate = "F"
     } else if (state1 == "0" && state2 == "1") {
       status = "available";
+      boxstate = "R"
     } else if (state1 == "1" && state2 == "1") {
-      status = "hack";
-    } else {
-      status = "";
+      status = "unlocked"; // change to hack state when needed
+      boxstate = "F"
     }
-    return status;;
+    return { status, boxstate };
   }
 }
