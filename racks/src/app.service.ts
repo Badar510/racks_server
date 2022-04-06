@@ -95,7 +95,7 @@ export class AppService {
         const compartmentObj = await this.racksModel.findOne({ compartment: updateStateDto.compartment }).exec();
         if (compartmentObj) {
           const currentDate = moment();
-          compartmentObj.boxstate = boxstate;
+          compartmentObj.liveBoxstate = boxstate;
           compartmentObj.lastSeen = currentDate;
           compartmentObj.status = true;
           await compartmentObj.save();
@@ -163,11 +163,11 @@ export class AppService {
     const compartmentsStatusArray = [];
     allData.forEach(element => {
       let status = "";
-      if (element.boxstate == "R") {
+      if (element.liveBoxstate == "R") {
         status = "available";
-      } else if (element.boxstate == "L") {
+      } else if (element.liveBoxstate == "L") {
         status = "occupied";
-      } else if (element.boxstate == "F") {
+      } else if (element.liveBoxstate == "F") {
         status = "unlocked";
       } else {
         return "";

@@ -7,6 +7,7 @@ export const RackSchema = new mongoose.Schema(
         time: { type: String, required: false },
         duration: { type: String, required: false },
         boxstate: { type: String, required: false },
+        liveBoxstate: { type: String, required: false },
         lastSeen: { type: Date, required: false },
         status: { type: Boolean, required: false },
     },
