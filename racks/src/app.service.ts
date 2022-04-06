@@ -35,14 +35,17 @@ export class AppService {
           compartmentObj.lastSeen = currentDate;
           compartmentObj.status = true;
           await compartmentObj.save();
-          if (compartmentObj.compartment == "A-01") {
+          if (compartmentObj.compartment == "B-02") {
             // compartmentObj.boxstate = "F";
-            // console.log(compartmentObj);
+            console.log(compartmentObj);
           }
           return compartmentObj;
         }
+        console.log("Compartment Not Found");
         return "Compartment Not Found";
       } catch (e) {
+        console.log("Err");
+
         return e.message;
       }
     }
@@ -137,7 +140,7 @@ export class AppService {
   }
 
   // Cron Jobs
-  
+
   // One minute
   @Cron("* * * * *")
   async patchCompartmentStates() {
@@ -185,7 +188,8 @@ export class AppService {
           return "Updated";
         })
         .catch(err => {
-          console.log(err.response.data);
+          console.error("Patch API Failed");
+          // console.log(err.response);
           return err;
         });
     }
