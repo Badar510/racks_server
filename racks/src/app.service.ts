@@ -67,8 +67,8 @@ export class AppService {
     if (boxChar === "Z") {
       //This section is to detect if the compartments are on fresh start then in future they will send all the states of switches, we can syncs them with server
       const arrayBoxes = ["A", "B", "C", "D"];
+      console.log("Updating all compartment states");
       arrayBoxes.forEach(async box => {
-        console.log(box + "-" + boxNum);
         const compartmentObj = await this.racksModel.findOne({ compartment: box + "-" + boxNum }).exec();
         let boxStatesObj = { status: "", boxstate: "" };
         switch (boxChar) {
@@ -91,7 +91,8 @@ export class AppService {
         compartmentObj.lastSeen = currentDate;
         compartmentObj.status = true;
         await compartmentObj.save();
-      })
+        console.log("Done!");
+      });
     } else {
       //This section is when a change of state is detected like opening a locker, then we can update the state on server.
       let boxStatesObj = { status: "", boxstate: "" };
@@ -309,13 +310,13 @@ export class AppService {
       boxstate = "L";
     } else if (state1 == "1" && state2 == "0") {
       status = "unlocked";
-      boxstate = "F"
+      boxstate = "F";
     } else if (state1 == "0" && state2 == "1") {
       status = "available";
-      boxstate = "R"
+      boxstate = "R";
     } else if (state1 == "1" && state2 == "1") {
       status = "unlocked"; // change to hack state when needed
-      boxstate = "F"
+      boxstate = "F";
     }
     return { status, boxstate };
   }
