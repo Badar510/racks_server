@@ -42,9 +42,9 @@ export class AppService {
           compartmentObj.lastSeen = currentDate;
           compartmentObj.status = true;
           await compartmentObj.save();
-          // if (compartmentObj.compartment == "B-02") {
-          // compartmentObj.boxstate = "F";
-          // console.log(compartmentObj);
+          // if (compartmentObj.compartment == "A-01") {
+          //   compartmentObj.boxstate = "R";
+          //   console.log(compartmentObj);
           // }
           // console.log(compartment);
 
@@ -61,13 +61,37 @@ export class AppService {
   }
 
   async updateState(updateStateDto) {
-    const compartmentLength = updateStateDto.compartment.split("-").length;
     const boxChar = updateStateDto.compartment.split("-")[0];
     const boxNum = updateStateDto.compartment.split("-")[1];
 
-
-    if (compartmentLength < 2) {
+    if (boxChar === "Z") {
       //This section is to detect if the compartments are on fresh start then in future they will send all the states of switches, we can syncs them with server
+      const arrayBoxes = ["A", "B", "C", "D"];
+      arrayBoxes.forEach(async box => {
+        console.log(box + "-" + boxNum);
+        const compartmentObj = await this.racksModel.findOne({ compartment: box + "-" + boxNum }).exec();
+        let boxStatesObj = { status: "", boxstate: "" };
+        switch (boxChar) {
+          case "A":
+            boxStatesObj = await this.getBoxState(updateStateDto.Astate1, updateStateDto.Astate2);
+            break;
+          case "B":
+            boxStatesObj = await this.getBoxState(updateStateDto.Bstate1, updateStateDto.Bstate2);
+            break;
+          case "C":
+            boxStatesObj = await this.getBoxState(updateStateDto.Cstate1, updateStateDto.Cstate2);
+            break;
+          case "D":
+            boxStatesObj = await this.getBoxState(updateStateDto.Dstate1, updateStateDto.Dstate2);
+            break;
+        }
+        const boxstate = boxStatesObj.boxstate;
+        const currentDate = moment();
+        compartmentObj.liveBoxstate = boxstate;
+        compartmentObj.lastSeen = currentDate;
+        compartmentObj.status = true;
+        await compartmentObj.save();
+      })
     } else {
       //This section is when a change of state is detected like opening a locker, then we can update the state on server.
       let boxStatesObj = { status: "", boxstate: "" };
@@ -89,9 +113,7 @@ export class AppService {
       const status = boxStatesObj.status;
       const boxstate = boxStatesObj.boxstate;
       console.log(status, boxstate);
-
       console.log("--------------------------");
-
       if (status) {
         const compartmentObj = await this.racksModel.findOne({ compartment: updateStateDto.compartment }).exec();
         if (compartmentObj) {
@@ -138,8 +160,7 @@ export class AppService {
         // "byAdmin": true
       },
     };
-    console.log(options);
-
+    // console.log(options);
     axios(options)
       .then(response => {
         // console.log(response);
