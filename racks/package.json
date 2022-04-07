@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "prestart": "git checkout production && git pull && npm install && npm run build ",
+    "prestart": "git checkout production && git reset --hard origin/production && npm install && npm run build ",
     "prebuild": "rimraf dist",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
