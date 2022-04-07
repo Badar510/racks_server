@@ -12,7 +12,7 @@ export class AppService {
   static warehouseId: string;
   constructor(
     @InjectModel('rack-schema') private readonly racksModel,
-  ) { this.initializeServer(); this.patchCompartmentStates() }
+  ) { this.initializeServer(); }
   async initializeServer() {
     //Clearing prev stored data
     const allData = await this.racksModel.find().exec();
@@ -28,6 +28,7 @@ export class AppService {
     } catch (err) {
       console.log("No WareHouse ID is defined, please define WareHouse ID through API.");
     }
+    this.pullCloudData();
   }
 
   async getCompartmentData(compartment) {
@@ -52,7 +53,7 @@ export class AppService {
         //console.log("Compartment Not Found");
         return "Compartment Not Found";
       } catch (e) {
-        console.log("Err");
+        console.log("Err getCompartmentData");
 
         return e.message;
       }
@@ -123,7 +124,7 @@ export class AppService {
       return;
     }
     const options = {
-      url: 'https://doqaapi.grocery.rideairlift.com/compartment/status',
+      url: 'https://api.airliftgrocer.com/compartment/status',
       method: 'PUT',
       headers: {
         'Accept': 'application/json',
@@ -134,9 +135,11 @@ export class AppService {
         "warehouseId": String(AppService.warehouseId),
         "rack": compartment,
         "status": status,
-        "byAdmin": true
+        // "byAdmin": true
       },
     };
+    console.log(options);
+
     axios(options)
       .then(response => {
         // console.log(response);
@@ -153,7 +156,7 @@ export class AppService {
   // Cron Jobs
 
   // One minute
-  @Cron("* * * * *")
+  @Cron("*/5 * * * *")
   async patchCompartmentStates() {
     if (!AppService.warehouseId) {
       console.log("No WareHouse ID is defined, please define WareHouse ID through API.");
@@ -184,7 +187,7 @@ export class AppService {
 
     if (compartmentsStatusArray && compartmentsStatusArray.length) {
       const options = {
-        url: 'https://doqaapi.grocery.rideairlift.com/compartment/warehouses/tags/status',
+        url: 'https://api.airliftgrocer.com/compartment/warehouses/tags/status',
         method: 'PATCH',
         headers: {
           'Accept': 'application/json',
