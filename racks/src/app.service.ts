@@ -126,18 +126,19 @@ export class AppService {
         this.putApiCall(updateStateDto.compartment, status);
       }
     }
-
   }
 
   async changeWarehouseId(warehouseId) {
     if (!warehouseId) {
       throw new HttpException({ message: "Please provide warehouseId in query params." }, 400);
     }
+    console.log("Received warehouse id: ", warehouseId);
     await fs.writeFile('./configs.json', '{"warehouseId":' + warehouseId + '}', (err) => {
       if (err) throw err;
     });
     AppService.warehouseId = warehouseId;
-    return "WareHouse ID changed successfully!";
+    console.log("Successfully changed!");
+    return "WareHouse ID changed to: " + String(warehouseId) + " successfully!";
   }
 
   async putApiCall(compartment, status) {
@@ -204,8 +205,6 @@ export class AppService {
         });
       }
     });
-    console.log(compartmentsStatusArray);
-
     if (compartmentsStatusArray && compartmentsStatusArray.length) {
       const options = {
         url: 'https://api.airliftgrocer.com/compartment/warehouses/tags/status',
