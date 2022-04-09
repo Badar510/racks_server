@@ -179,7 +179,7 @@ export class AppService {
   // Cron Jobs
 
   // One minute
-  @Cron("*/5 * * * *")
+  // @Cron("*/5 * * * *")
   async patchCompartmentStates() {
     if (!AppService.warehouseId) {
       console.log("No WareHouse ID is defined, please define WareHouse ID through API.");
@@ -308,16 +308,16 @@ export class AppService {
     if (state1 == "0" && state2 == "0") {
       status = "occupied";
       boxstate = "L";
-    } else if (state1 == "1" && state2 == "0") {
-      status = "unlocked";
-      boxstate = "F";
-    } else if (state1 == "0" && state2 == "1") {
-      status = "available";
-      boxstate = "R";
-    } else if (state1 == "1" && state2 == "1") {
-      status = "unlocked"; // change to hack state when needed
-      boxstate = "F";
-    }
+    } // else if (state1 == "1" && state2 == "0") {
+    //   status = "unlocked";
+    //   boxstate = "F";
+    // } else if (state1 == "0" && state2 == "1") {
+    //   status = "available";
+    //   boxstate = "R";
+    // } else if (state1 == "1" && state2 == "1") {
+    //   status = "unlocked"; // change to hack state when needed
+    //   boxstate = "F";
+    // }
     return { status, boxstate };
   }
 }
