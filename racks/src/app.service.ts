@@ -190,11 +190,11 @@ export class AppService {
     allData.forEach(element => {
       let status = "";
       if (element.liveBoxstate == "R") {
-        status = "available";
+        status = "occupied";
       } else if (element.liveBoxstate == "L") {
         status = "occupied";
       } else if (element.liveBoxstate == "F") {
-        status = "unlocked";
+        status = "occupied";
       } else {
         return "";
       }
