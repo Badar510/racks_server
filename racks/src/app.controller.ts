@@ -22,6 +22,6 @@ export class AppController {
 
   @Get('manual/override')
   async manualOverRide(@Query() manualOverRideDto: ManualOverRideDto) {
-    return this.appService.manualOverRide(manualOverRideDto.boxstate, manualOverRideDto.timeout);
+    return this.appService.manualOverRide(manualOverRideDto.boxstate, manualOverRideDto.timeout, manualOverRideDto.code);
   }
 }

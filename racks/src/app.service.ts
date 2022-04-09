@@ -150,15 +150,16 @@ export class AppService {
     return "WareHouse ID changed to: " + String(warehouseId) + " successfully!";
   }
 
-  async manualOverRide(boxstate, timeout) {
+  async manualOverRide(boxstate, timeout, code) {
     const currentDate = moment();
     const allData = await this.racksModel.find().exec();
     allData.forEach(async compartment => {
       compartment.boxstate = boxstate;
       compartment.manualOverRideTime = currentDate;
       compartment.manualOverRideTimeout = timeout;
+      if (boxstate == "L")
+        compartment.code = code;
       await compartment.save();
-      // console.log(compartment);
     });
     return "Manual Override for " + timeout + " seconds.";
   }

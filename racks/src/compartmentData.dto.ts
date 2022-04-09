@@ -23,4 +23,5 @@ export class WarehouseIdDto {
 export class ManualOverRideDto {
     boxstate: string;
     timeout: number;
+    code: number;
 }
