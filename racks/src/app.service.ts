@@ -12,7 +12,9 @@ export class AppService {
   static warehouseId: string;
   constructor(
     @InjectModel('rack-schema') private readonly racksModel,
-  ) { this.initializeServer(); }
+  ) {
+    this.initializeServer();
+  }
   async initializeServer() {
     //Clearing prev stored data
     const allData = await this.racksModel.find().exec();
@@ -148,6 +150,18 @@ export class AppService {
     return "WareHouse ID changed to: " + String(warehouseId) + " successfully!";
   }
 
+  async manualOverRide(boxstate, timeout) {
+    const currentDate = moment();
+    const allData = await this.racksModel.find().exec();
+    allData.forEach(async compartment => {
+      compartment.boxstate = boxstate;
+      compartment.manualOverRideTime = currentDate;
+      compartment.manualOverRideTimeout = timeout;
+      await compartment.save();
+      // console.log(compartment);
+    });
+    return "Manual Override for " + timeout + " seconds.";
+  }
   async putApiCall(compartment, status, side) {
     if (!AppService.warehouseId) {
       console.log("No WareHouse ID is defined, please define WareHouse ID through API.");
@@ -268,6 +282,7 @@ export class AppService {
       return;
     }
     try {
+      const currentDate = moment();
       const response = await axios.get('https://api.airliftgrocer.com/v2/orders/packed/compartments?warehouse=' + String(AppService.warehouseId), {
         headers: {
           auth: 'Groc3R@Sm@rtR@ck',
@@ -279,12 +294,19 @@ export class AppService {
         response.data.forEach(async eachData => {
           const compartmentObj = await this.racksModel.findOne({ compartment: eachData['compartment'] }).exec();
           if (compartmentObj) {
-            compartmentObj.code = eachData['code'];
-            compartmentObj.time = eachData['time'];
-            compartmentObj.duration = eachData['duration'];
-            compartmentObj.boxstate = eachData['boxstate'];
-            await compartmentObj.save();
-            // console.log('Updated');
+            const overRideTimeDiff = moment(currentDate).diff(moment(compartmentObj.manualOverRideTime), 'seconds');
+            // console.log(overRideTimeDiff);
+            if (overRideTimeDiff <= 0 || overRideTimeDiff > compartmentObj.manualOverRideTimeout) {
+              // console. log("Pulling Cloud Data");
+              compartmentObj.code = eachData['code'];
+              compartmentObj.time = eachData['time'];
+              compartmentObj.duration = eachData['duration'];
+              compartmentObj.boxstate = eachData['boxstate'];
+              await compartmentObj.save();
+              // console.log('Updated');
+            } else {
+              // console.log('not pulling cloud data');
+            }
           } else {
             const data = new this.racksModel({
               compartment: eachData['compartment'],
@@ -296,6 +318,7 @@ export class AppService {
             await data.save();
             // console.log('Created new');
           }
+
         });
       } else {
         console.log("No Data Retured from cloud API");

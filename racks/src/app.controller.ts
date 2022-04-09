@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Query } from '@nestjs/common';
 import { AppService } from './app.service';
-import { CompartmentDataDto, UpdateStateDto, WarehouseIdDto } from './compartmentData.dto';
+import { CompartmentDataDto, UpdateStateDto, WarehouseIdDto, ManualOverRideDto } from './compartmentData.dto';
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) { }
@@ -18,5 +18,10 @@ export class AppController {
   @Get('change/warehouse/id')
   async changeWarehouseId(@Query() warehouseIdDto: WarehouseIdDto) {
     return this.appService.changeWarehouseId(warehouseIdDto.warehouseId);
+  }
+
+  @Get('manual/override')
+  async manualOverRide(@Query() manualOverRideDto: ManualOverRideDto) {
+    return this.appService.manualOverRide(manualOverRideDto.boxstate, manualOverRideDto.timeout);
   }
 }
