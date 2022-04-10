@@ -42,10 +42,10 @@ export class AppService {
           compartmentObj.lastSeen = currentDate;
           compartmentObj.status = true;
           await compartmentObj.save();
-          // if (compartmentObj.compartment == "A-01") {
-          //   compartmentObj.boxstate = "R";
-          //   console.log(compartmentObj);
-          // }
+          if (compartmentObj.compartment == "A-08") {
+            // compartmentObj.boxstate = "R";
+            // console.log(compartmentObj.code);
+          }
           // console.log(compartment);
 
           return compartmentObj;
@@ -130,10 +130,6 @@ export class AppService {
           compartmentObj.lastSeen = currentDate;
           compartmentObj.status = true;
           await compartmentObj.save();
-          console.log(compartmentObj.liveBoxstate);
-          console.log(side);
-
-
         }
         if (status == 'occupied')
           this.putApiCall(updateStateDto.compartment, status, side);
@@ -152,6 +148,31 @@ export class AppService {
     AppService.warehouseId = warehouseId;
     console.log("Successfully changed!");
     return "WareHouse ID changed to: " + String(warehouseId) + " successfully!";
+  }
+
+  async manualOverRide(manualOverRideDto) {
+    const currentDate = moment();
+    if (manualOverRideDto.compartment) {
+      const compartment = await this.racksModel.findOne({ compartment: manualOverRideDto.compartment }).exec();
+      compartment.boxstate = manualOverRideDto.boxstate;
+      compartment.manualOverRideTime = currentDate;
+      compartment.manualOverRideTimeout = manualOverRideDto.timeout;
+      if (manualOverRideDto.boxstate == "L")
+        compartment.code = manualOverRideDto.code;
+      await compartment.save();
+      return "Compartment: " + manualOverRideDto.compartment + "Manual Override for " + manualOverRideDto.timeout + " seconds.";
+    } else if (manualOverRideDto.updateAll) {
+      const allData = await this.racksModel.find().exec();
+      allData.forEach(async compartment => {
+        compartment.boxstate = manualOverRideDto.boxstate;
+        compartment.manualOverRideTime = currentDate;
+        compartment.manualOverRideTimeout = manualOverRideDto.timeout;
+        if (manualOverRideDto.boxstate == "L")
+          compartment.code = manualOverRideDto.code;
+        await compartment.save();
+      });
+      return "ALL Compartments Manual Override for " + manualOverRideDto.timeout + " seconds.";
+    }
   }
 
   async putApiCall(compartment, status, side) {
@@ -274,6 +295,7 @@ export class AppService {
       return;
     }
     try {
+      const currentDate = moment();
       const response = await axios.get('https://api.airliftgrocer.com/v2/orders/packed/compartments?warehouse=' + String(AppService.warehouseId), {
         headers: {
           auth: 'Groc3R@Sm@rtR@ck',
@@ -285,12 +307,19 @@ export class AppService {
         response.data.forEach(async eachData => {
           const compartmentObj = await this.racksModel.findOne({ compartment: eachData['compartment'] }).exec();
           if (compartmentObj) {
-            compartmentObj.code = eachData['code'];
-            compartmentObj.time = eachData['time'];
-            compartmentObj.duration = eachData['duration'];
-            compartmentObj.boxstate = eachData['boxstate'];
-            await compartmentObj.save();
-            // console.log('Updated');
+            const overRideTimeDiff = moment(currentDate).diff(moment(compartmentObj.manualOverRideTime), 'seconds');
+            // console.log(overRideTimeDiff);
+            if (overRideTimeDiff <= 0 || overRideTimeDiff > compartmentObj.manualOverRideTimeout) {
+              // console. log("Pulling Cloud Data");
+              compartmentObj.code = eachData['code'];
+              compartmentObj.time = eachData['time'];
+              compartmentObj.duration = eachData['duration'];
+              compartmentObj.boxstate = eachData['boxstate'];
+              await compartmentObj.save();
+              // console.log('Updated');
+            } else {
+              // console.log('not pulling cloud data');
+            }
           } else {
             const data = new this.racksModel({
               compartment: eachData['compartment'],
@@ -302,6 +331,7 @@ export class AppService {
             await data.save();
             // console.log('Created new');
           }
+
         });
       } else {
         console.log("No Data Retured from cloud API");
@@ -315,7 +345,7 @@ export class AppService {
   }
 
   async getBoxState(state1, state2) {
-    console.log(state1, state2);
+    // console.log(state1, state2);
     let status = "";
     let boxstate = "";
     if (state1 == "0" && state2 == "0") {

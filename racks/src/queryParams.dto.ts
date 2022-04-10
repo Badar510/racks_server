@@ -18,3 +18,11 @@ export class UpdateStateDto {
 export class WarehouseIdDto {
     warehouseId: string;
 }
+
+export class ManualOverRideDto {
+    boxstate: string;
+    timeout: number;
+    code: number;
+    compartment?: string;
+    updateAll?: boolean;
+}
