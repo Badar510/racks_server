@@ -63,31 +63,30 @@ export class AppService {
   async updateState(updateStateDto) {
     const boxChar = updateStateDto.compartment.split("-")[0];
     const boxNum = updateStateDto.compartment.split("-")[1];
-
     if (boxChar === "Z") {
       //This section is to detect if the compartments are on fresh start then in future they will send all the states of switches, we can syncs them with server
       const arrayBoxes = ["A", "B", "C", "D"];
       console.log("Updating all compartment states");
       arrayBoxes.forEach(async box => {
         const compartmentObj = await this.racksModel.findOne({ compartment: box + "-" + boxNum }).exec();
-        let boxStatesObj = { status: "", boxstate: "" };
-        switch (boxChar) {
-          case "A":
-            boxStatesObj = await this.getBoxState(updateStateDto.Astate1, updateStateDto.Astate2);
-            break;
-          case "B":
-            boxStatesObj = await this.getBoxState(updateStateDto.Bstate1, updateStateDto.Bstate2);
-            break;
-          case "C":
-            boxStatesObj = await this.getBoxState(updateStateDto.Cstate1, updateStateDto.Cstate2);
-            break;
-          case "D":
-            boxStatesObj = await this.getBoxState(updateStateDto.Dstate1, updateStateDto.Dstate2);
-            break;
-        }
-        const boxstate = boxStatesObj.boxstate;
-        const currentDate = moment();
         if (compartmentObj) {
+          let boxStatesObj = { status: "", boxstate: "" };
+          switch (boxChar) {
+            case "A":
+              boxStatesObj = await this.getBoxState(updateStateDto.Astate1, updateStateDto.Astate2);
+              break;
+            case "B":
+              boxStatesObj = await this.getBoxState(updateStateDto.Bstate1, updateStateDto.Bstate2);
+              break;
+            case "C":
+              boxStatesObj = await this.getBoxState(updateStateDto.Cstate1, updateStateDto.Cstate2);
+              break;
+            case "D":
+              boxStatesObj = await this.getBoxState(updateStateDto.Dstate1, updateStateDto.Dstate2);
+              break;
+          }
+          const boxstate = boxStatesObj.boxstate;
+          const currentDate = moment();
           compartmentObj.liveBoxstate = boxstate;
           compartmentObj.lastSeen = currentDate;
           compartmentObj.status = true;
