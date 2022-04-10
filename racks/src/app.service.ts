@@ -66,12 +66,12 @@ export class AppService {
     if (boxChar === "Z") {
       //This section is to detect if the compartments are on fresh start then in future they will send all the states of switches, we can syncs them with server
       const arrayBoxes = ["A", "B", "C", "D"];
-      console.log("Updating all compartment states");
+      console.log("Updating all compartment states, box number: " + boxNum);
       arrayBoxes.forEach(async box => {
         const compartmentObj = await this.racksModel.findOne({ compartment: box + "-" + boxNum }).exec();
         if (compartmentObj) {
           let boxStatesObj = { status: "", boxstate: "" };
-          switch (boxChar) {
+          switch (box) {
             case "A":
               boxStatesObj = await this.getBoxState(updateStateDto.Astate1, updateStateDto.Astate2);
               break;
@@ -118,6 +118,7 @@ export class AppService {
       if (status) {
         let side = "";
         const compartmentObj = await this.racksModel.findOne({ compartment: updateStateDto.compartment }).exec();
+        console.log(compartmentObj.liveBoxstate);
         if (compartmentObj) {
           if (compartmentObj.liveBoxstate == "R" && boxstate == "L") {
             side = "picker";
@@ -129,6 +130,10 @@ export class AppService {
           compartmentObj.lastSeen = currentDate;
           compartmentObj.status = true;
           await compartmentObj.save();
+          console.log(compartmentObj.liveBoxstate);
+          console.log(side);
+
+
         }
         if (status == 'occupied')
           this.putApiCall(updateStateDto.compartment, status, side);
@@ -174,7 +179,7 @@ export class AppService {
     axios(options)
       .then(response => {
         // console.log(response);
-        console.log("Event log Success: compartment " + compartment + " updated PUT API, Status: " + status);
+        console.log("Event log Success: compartment " + compartment + " updated PUT API, Status: " + status + "  ,Side: " + side);
         return "Updated";
       })
       .catch(err => {
