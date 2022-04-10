@@ -87,6 +87,12 @@ export class AppService {
         }
         const boxstate = boxStatesObj.boxstate;
         const currentDate = moment();
+        let side = '';
+        if (compartmentObj.liveBoxstate == "R" && boxstate == "L") {
+          side = "picker";
+        } else if (compartmentObj.liveBoxstate == "F" && boxstate == "L") {
+          side = "rider";
+        }
         compartmentObj.liveBoxstate = boxstate;
         compartmentObj.lastSeen = currentDate;
         compartmentObj.status = true;
@@ -315,16 +321,16 @@ export class AppService {
     if (state1 == "0" && state2 == "0") {
       status = "occupied";
       boxstate = "L";
-    } // else if (state1 == "1" && state2 == "0") {
-    //   status = "unlocked";
-    //   boxstate = "F";
-    // } else if (state1 == "0" && state2 == "1") {
-    //   status = "available";
-    //   boxstate = "R";
-    // } else if (state1 == "1" && state2 == "1") {
-    //   status = "unlocked"; // change to hack state when needed
-    //   boxstate = "F";
-    // }
+    } else if (state1 == "1" && state2 == "0") {
+      status = "unlocked";
+      boxstate = "F";
+    } else if (state1 == "0" && state2 == "1") {
+      status = "available";
+      boxstate = "R";
+    } else if (state1 == "1" && state2 == "1") {
+      status = "unlocked"; // change to hack state when needed
+      boxstate = "F";
+    }
     return { status, boxstate };
   }
 }
