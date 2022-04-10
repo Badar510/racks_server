@@ -116,15 +116,21 @@ export class AppService {
       console.log(status, boxstate);
       console.log("--------------------------");
       if (status) {
+        let side = "";
         const compartmentObj = await this.racksModel.findOne({ compartment: updateStateDto.compartment }).exec();
         if (compartmentObj) {
+          if (compartmentObj.liveBoxstate == "R" && boxstate == "L") {
+            side = "picker";
+          } else if (compartmentObj.liveBoxstate == "F" && boxstate == "L") {
+            side = "rider";
+          }
           const currentDate = moment();
           compartmentObj.liveBoxstate = boxstate;
           compartmentObj.lastSeen = currentDate;
           compartmentObj.status = true;
           await compartmentObj.save();
         }
-        this.putApiCall(updateStateDto.compartment, status);
+        this.putApiCall(updateStateDto.compartment, status, side);
       }
     }
   }
@@ -142,7 +148,7 @@ export class AppService {
     return "WareHouse ID changed to: " + String(warehouseId) + " successfully!";
   }
 
-  async putApiCall(compartment, status) {
+  async putApiCall(compartment, status, side) {
     if (!AppService.warehouseId) {
       console.log("No WareHouse ID is defined, please define WareHouse ID through API.");
       return;
@@ -159,6 +165,7 @@ export class AppService {
         "warehouseId": String(AppService.warehouseId),
         "rack": compartment,
         "status": status,
+        "Side": side,
         // "byAdmin": true
       },
     };
