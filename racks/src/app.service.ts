@@ -87,17 +87,12 @@ export class AppService {
         }
         const boxstate = boxStatesObj.boxstate;
         const currentDate = moment();
-        let side = '';
-        if (compartmentObj.liveBoxstate == "R" && boxstate == "L") {
-          side = "picker";
-        } else if (compartmentObj.liveBoxstate == "F" && boxstate == "L") {
-          side = "rider";
+        if (compartmentObj) {
+          compartmentObj.liveBoxstate = boxstate;
+          compartmentObj.lastSeen = currentDate;
+          compartmentObj.status = true;
+          await compartmentObj.save();
         }
-        compartmentObj.liveBoxstate = boxstate;
-        compartmentObj.lastSeen = currentDate;
-        compartmentObj.status = true;
-        await compartmentObj.save();
-        console.log("Done!");
       });
     } else {
       //This section is when a change of state is detected like opening a locker, then we can update the state on server.
