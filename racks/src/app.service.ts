@@ -130,7 +130,8 @@ export class AppService {
           compartmentObj.status = true;
           await compartmentObj.save();
         }
-        this.putApiCall(updateStateDto.compartment, status, side);
+        if (status == 'occupied')
+          this.putApiCall(updateStateDto.compartment, status, side);
       }
     }
   }
