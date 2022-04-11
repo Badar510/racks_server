@@ -131,7 +131,7 @@ export class AppService {
           compartmentObj.status = true;
           await compartmentObj.save();
         }
-        if (status == 'occupied')
+        if (status == 'occupied' || status == 'available')
           this.putApiCall(updateStateDto.compartment, status, side);
       }
     }
@@ -180,6 +180,9 @@ export class AppService {
       console.log("No WareHouse ID is defined, please define WareHouse ID through API.");
       return;
     }
+    if (status == 'available') {
+      side = 'picker';
+    }
     const options = {
       url: 'https://api.airliftgrocer.com/compartment/status',
       method: 'PUT',
@@ -196,11 +199,11 @@ export class AppService {
         // "byAdmin": true
       },
     };
-    // console.log(options);
+    //console.log(options);
     axios(options)
       .then(response => {
         // console.log(response);
-        console.log("Event log Success: compartment " + compartment + " updated PUT API, Status: " + status + "  ,Side: " + side);
+        console.log("Event log Success: compartment " + compartment + " updated PUT API, Status: " + status + "  ,side: " + side);
         return "Updated";
       })
       .catch(err => {
@@ -224,7 +227,7 @@ export class AppService {
     allData.forEach(element => {
       let status = "";
       if (element.liveBoxstate == "R") {
-        // status = "occupied";
+        status = "available";
       } else if (element.liveBoxstate == "L") {
         status = "occupied";
       } else if (element.liveBoxstate == "F") {
