@@ -192,7 +192,7 @@ export class AppService {
         "warehouseId": String(AppService.warehouseId),
         "rack": compartment,
         "status": status,
-        "Side": side,
+        "side": side,
         // "byAdmin": true
       },
     };
