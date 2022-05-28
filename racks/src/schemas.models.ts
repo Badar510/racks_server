@@ -9,11 +9,13 @@ export const RackSchema = new mongoose.Schema(
         boxstate: { type: String, required: false },
         liveBoxstate: { type: String, required: false },
         lastSeen: { type: Date, required: false },
+        lastSeenEventController: { type: Date, required: false },
         status: { type: Boolean, required: false },
+        statusEventController: { type: Boolean, required: false },
         manualOverRideTime: { type: Date, required: false },
         manualOverRideTimeout: { type: Number, required: false },
     },
     {
         timestamps: true,
     },
-);
+);  

@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
 import { RackSchema } from '../schemas.models';
 import { Cron } from '@nestjs/schedule';
+import moment from 'moment';
 const fs = require('fs');
 
 @Injectable()
@@ -49,7 +50,8 @@ export class CloudService {
             );
             if (mongoose.connection.readyState === 1) {
                 const cloudDataModel = mongoose.model('compartmentsInfo', RackSchema);
-                const allCloudCompartments = await cloudDataModel.find().exec();
+                const warehouseInfo = mongoose.model('warehouseInfo', RackSchema);
+                // const allCloudCompartments = await cloudDataModel.find().exec();
                 // allCloudCompartments.forEach(async comparment => {
                 //     await comparment.delete();
                 // });
@@ -64,7 +66,9 @@ export class CloudService {
                         prevCompartment['boxstate'] = comparment.boxstate;
                         prevCompartment['liveBoxstate'] = comparment.liveBoxstate;
                         prevCompartment['lastSeen'] = comparment.lastSeen;
+                        prevCompartment['lastSeenEventController'] = comparment.lastSeenEventController;
                         prevCompartment['status'] = comparment.status;
+                        prevCompartment['statusEventController'] = comparment.statusEventController;
                         prevCompartment['manualOverRideTime'] = comparment.manualOverRideTime;
                         prevCompartment['manualOverRideTimeout'] = comparment.manualOverRideTimeout;
                         await prevCompartment.save();
@@ -84,6 +88,15 @@ export class CloudService {
                         });
                         newData.save();
                         // console.log("Created new cloud compartment");
+                    }
+                    const prevWarehouse = await warehouseInfo.findOne({ warehouseId: CloudService.warehouseId }).exec();
+                    if (prevWarehouse) {
+                        prevWarehouse['lastUpdated'] = moment();
+                    } else {
+                        const newData = new warehouseInfo({
+                            lastUpdated: moment(),
+                        });
+                        newData.save();
                     }
                 });
                 return 'Data Uploaded Successfully';

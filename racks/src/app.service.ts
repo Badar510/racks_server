@@ -90,6 +90,7 @@ export class AppService {
           compartmentObj.liveBoxstate = boxstate;
           compartmentObj.lastSeen = currentDate;
           compartmentObj.status = true;
+          compartmentObj.statusEventController = true;
           await compartmentObj.save();
         }
       });
@@ -129,6 +130,7 @@ export class AppService {
           compartmentObj.liveBoxstate = boxstate;
           compartmentObj.lastSeen = currentDate;
           compartmentObj.status = true;
+          compartmentObj.statusEventController = true;
           await compartmentObj.save();
         }
         if (status == 'occupied' || status == 'available')
@@ -278,10 +280,16 @@ export class AppService {
     allData.forEach(async element => {
       if (element.lastSeen) {
         const lastSeen = moment(element.lastSeen);
+        const lastSeenEventController = moment(element.lastSeenEventController);
+
         // console.log(currentDate.diff(lastSeen, 'seconds'));
         const lastSeenDiff = currentDate.diff(lastSeen, 'seconds');
         if (lastSeenDiff > 59) {
           element.status = false;
+        }
+        const lastSeenEventControllerDiff = currentDate.diff(lastSeenEventController, 'seconds');
+        if (lastSeenEventControllerDiff > 59) {
+          element.statusEventController = false;
         }
       } else {
         element.status = false;
