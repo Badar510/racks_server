@@ -6,6 +6,7 @@ import moment = require('moment');
 import { Cron } from '@nestjs/schedule';
 let internetDown = false;
 const fs = require('fs');
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 @Injectable()
 export class AppService {
@@ -365,5 +366,53 @@ export class AppService {
       boxstate = "F";
     }
     return { status, boxstate };
+  }
+
+  /* Upload the data to cloud database every one minute, you can change the upload time here, read https://www.npmjs.com/package/node-cron for more information*/
+  // For example to run the task every 2 minutes use @Cron('*/2 * * * * *')
+  // DO NOT USE TIME OF LESS THAN ONE MINUTE BECAUSE OF TIMEMOUT TO CONNECTI WITH ATLAS MONGODB
+  @Cron('*/5 * * * * *')
+  async uploadData() {
+    if (!AppService.warehouseId) {
+      return;
+    }
+    const LocalData = await this.racksModel.find().exec();
+    if (!LocalData.length) {
+      return 'No Local Data Found';
+    }
+    const compartmentsArr = [];
+    LocalData.forEach(async element => {
+      compartmentsArr.push(
+        {
+          "compartment": element.compartment,
+          "boxstate": element.boxstate,
+          "code": element.code,
+          "livestatedisplay": element.status,
+          "livestaterelay": "Working",
+          "livestatefeedback": "Working",
+          "smartenable": "Working"
+        }
+      )
+    });
+    var axios = require('axios');
+    var data = JSON.stringify(compartmentsArr);
+
+    var config = {
+      method: 'post',
+      url: `https://destratech.pythonanywhere.com/smartracks/cloud/${String(AppService.warehouseId)}/`,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      data: data
+    };
+
+    axios(config)
+      .then(function (response) {
+        console.log("Data pushed to cloud");
+      })
+      .catch(function (error) {
+        console.log("Data cannot be pushed to cloud");
+      });
+
   }
 }
