@@ -34,8 +34,6 @@ export class AppService {
   }
 
   async getCompartmentData(compartment, relayBox) {
-    console.log(compartment, relayBox);
-
     if (internetDown) {
       throw new HttpException({}, 408);
     } else {
