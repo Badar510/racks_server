@@ -394,6 +394,8 @@ export class AppService {
         }
       )
     });
+    console.log(compartmentsArr);
+
     var axios = require('axios');
     var data = JSON.stringify(compartmentsArr);
 
