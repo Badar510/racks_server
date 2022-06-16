@@ -372,7 +372,7 @@ export class AppService {
   /* Upload the data to cloud database every one minute, you can change the upload time here, read https://www.npmjs.com/package/node-cron for more information*/
   // For example to run the task every 2 minutes use @Cron('*/2 * * * * *')
   // DO NOT USE TIME OF LESS THAN ONE MINUTE BECAUSE OF TIMEMOUT TO CONNECTI WITH ATLAS MONGODB
-  @Cron('*/5 * * * * *')
+  @Cron('*/30 * * * * *')
   async uploadDataToCloud() {
     if (!AppService.warehouseId) {
       return;
