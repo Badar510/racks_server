@@ -1,6 +1,7 @@
 
 export class CompartmentDataDto {
     compartment?: string;
+    relayBox?: string;
 }
 
 export class UpdateStateDto {

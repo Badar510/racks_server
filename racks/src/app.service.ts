@@ -33,7 +33,7 @@ export class AppService {
     this.pullCloudData();
   }
 
-  async getCompartmentData(compartment) {
+  async getCompartmentData(compartment, relayBox) {
     if (internetDown) {
       throw new HttpException({}, 408);
     } else {
@@ -43,6 +43,7 @@ export class AppService {
           const currentDate = moment();
           compartmentObj.lastSeen = currentDate;
           compartmentObj.status = true;
+          compartmentObj.relayBox = relayBox;
           await compartmentObj.save();
           const numCompartment = parseInt(compartment.split("-")[1])
           if (numCompartment >= 1 && numCompartment <= 6) {
@@ -320,6 +321,7 @@ export class AppService {
               compartmentObj.time = eachData['time'];
               compartmentObj.duration = eachData['duration'];
               compartmentObj.boxstate = eachData['boxstate'];
+              compartmentObj.smartenable = true;
               await compartmentObj.save();
               // console.log('Updated');
             } else {
@@ -331,7 +333,8 @@ export class AppService {
               code: eachData['code'],
               time: eachData['time'],
               duration: eachData['duration'],
-              boxstate: eachData['boxstate']
+              boxstate: eachData['boxstate'],
+              smartenable: false
             });
             await data.save();
             // console.log('Created new');
@@ -396,7 +399,7 @@ export class AppService {
           "livestatedisplay": element.status,
           "livestaterelay": "Working",
           "livestatefeedback": "Working",
-          "smartenable": "Working"
+          "smartenable": element.smartenable
         }
       )
     });

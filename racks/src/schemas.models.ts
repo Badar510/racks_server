@@ -10,6 +10,8 @@ export const RackSchema = new mongoose.Schema(
         liveBoxstate: { type: String, required: false },
         lastSeen: { type: Date, required: false },
         status: { type: Boolean, required: false, default: false },
+        relayBox: { type: Boolean, required: false, default: true },
+        smartenable: { type: Boolean, required: false, default: false },
         manualOverRideTime: { type: Date, required: false },
         manualOverRideTimeout: { type: Number, required: false },
     },

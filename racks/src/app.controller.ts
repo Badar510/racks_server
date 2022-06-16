@@ -7,7 +7,7 @@ export class AppController {
 
   @Get('compartmentData')
   async Dashboard(@Query() compartmentDataDto: CompartmentDataDto) {
-    return this.appService.getCompartmentData(compartmentDataDto.compartment);
+    return this.appService.getCompartmentData(compartmentDataDto.compartment, compartmentDataDto.relayBox);
   }
 
   @Get('updateState')
