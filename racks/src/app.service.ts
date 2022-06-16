@@ -45,8 +45,6 @@ export class AppService {
           compartmentObj.status = true;
           await compartmentObj.save();
           const numCompartment = parseInt(compartment.split("-")[1])
-          console.log(numCompartment);
-
           if (numCompartment >= 1 && numCompartment <= 6) {
             AppService.serverNum = 1;
           } else {
@@ -375,7 +373,7 @@ export class AppService {
   // For example to run the task every 2 minutes use @Cron('*/2 * * * * *')
   // DO NOT USE TIME OF LESS THAN ONE MINUTE BECAUSE OF TIMEMOUT TO CONNECTI WITH ATLAS MONGODB
   @Cron('*/5 * * * * *')
-  async uploadData() {
+  async uploadDataToCloud() {
     if (!AppService.warehouseId) {
       return;
     }
@@ -384,7 +382,18 @@ export class AppService {
       return 'No Local Data Found';
     }
     const compartmentsArr = [];
+    console.log(AppService.serverNum, "server num");
+
     LocalData.forEach(async element => {
+      console.log(parseInt(element.compartment.split("-")[1]))
+
+      if (AppService.serverNum == 1 && parseInt(element.compartment.split("-")[1]) > 6) {
+        console.log("returning");
+        return
+      } else if (AppService.serverNum == 2 && parseInt(element.compartment.split("-")[1]) <= 6) {
+        console.log("returning");
+        return
+      }
       compartmentsArr.push(
         {
           "compartment": element.compartment,
