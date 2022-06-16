@@ -11,6 +11,7 @@ const fs = require('fs');
 @Injectable()
 export class AppService {
   static warehouseId: string;
+  static serverNum: number;
   constructor(
     @InjectModel('rack-schema') private readonly racksModel,
   ) { this.initializeServer(); }
@@ -43,12 +44,14 @@ export class AppService {
           compartmentObj.lastSeen = currentDate;
           compartmentObj.status = true;
           await compartmentObj.save();
-          if (compartmentObj.compartment == "A-08") {
-            // compartmentObj.boxstate = "R";
-            // console.log(compartmentObj.code);
-          }
-          // console.log(compartment);
+          const numCompartment = parseInt(compartment.split("-")[1])
+          console.log(numCompartment);
 
+          if (numCompartment >= 1 && numCompartment <= 6) {
+            AppService.serverNum = 1;
+          } else {
+            AppService.serverNum = 2;
+          }
           return compartmentObj;
         }
         //console.log("Compartment Not Found");
