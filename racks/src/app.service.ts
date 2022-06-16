@@ -382,16 +382,10 @@ export class AppService {
       return 'No Local Data Found';
     }
     const compartmentsArr = [];
-    console.log(AppService.serverNum, "server num");
-
     LocalData.forEach(async element => {
-      console.log(parseInt(element.compartment.split("-")[1]))
-
       if (AppService.serverNum == 1 && parseInt(element.compartment.split("-")[1]) > 6) {
-        console.log("returning");
         return
       } else if (AppService.serverNum == 2 && parseInt(element.compartment.split("-")[1]) <= 6) {
-        console.log("returning");
         return
       }
       compartmentsArr.push(
