@@ -397,7 +397,7 @@ export class AppService {
           "boxstate": element.boxstate,
           "code": element.code,
           "livestatedisplay": element.status,
-          "livestaterelay": "Working",
+          "livestaterelay": element.relayBox,
           "livestatefeedback": "Working",
           "smartenable": element.smartenable
         }
