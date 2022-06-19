@@ -68,6 +68,7 @@ export class AppService {
   }
 
   async updateState(updateStateDto) {
+    const currentDate = moment();
     const boxChar = updateStateDto.compartment.split("-")[0];
     const boxNum = updateStateDto.compartment.split("-")[1];
     if (boxChar === "Z") {
@@ -93,10 +94,8 @@ export class AppService {
               break;
           }
           const boxstate = boxStatesObj.boxstate;
-          const currentDate = moment();
           compartmentObj.liveBoxstate = boxstate;
-          compartmentObj.lastSeen = currentDate;
-          compartmentObj.status = true;
+          compartmentObj.lastFeedbackReqTime = currentDate;
           await compartmentObj.save();
         }
       });
@@ -132,7 +131,6 @@ export class AppService {
           } else if (compartmentObj.liveBoxstate == "F" && boxstate == "L") {
             side = "rider";
           }
-          const currentDate = moment();
           compartmentObj.liveBoxstate = boxstate;
           compartmentObj.lastFeedbackReqTime = currentDate;
           await compartmentObj.save();
@@ -312,7 +310,7 @@ export class AppService {
     });
   }
 
-  @Cron("*/5 * * * * *")
+  @Cron("*/60 * * * * *")
   async pullCloudData() {
     if (!AppService.warehouseId) {
       console.log("No WareHouse ID is defined, please define WareHouse ID through API.");
