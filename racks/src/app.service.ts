@@ -294,7 +294,7 @@ export class AppService {
       const lastDataReceivedDiff = currentDate.diff(element.lastDataReceivedTime, 'seconds');
       console.log(element.compartment, 'data received time ', lastDataReceivedDiff);
 
-      if (lastDataReceivedDiff > 30) {
+      if (lastDataReceivedDiff > 60) {
         element.smartenable = false;
       } else {
         element.smartenable = true;
@@ -302,7 +302,7 @@ export class AppService {
 
       const lastFeedbackReqDiff = currentDate.diff(element.lastFeedbackReqTime, 'seconds');
       console.log(element.compartment, 'feedback time ', lastFeedbackReqDiff);
-      if (lastFeedbackReqDiff > 30) {
+      if (lastFeedbackReqDiff > 15) {
         element.feedbackBox = false;
       } else {
         element.feedbackBox = true;
@@ -312,7 +312,7 @@ export class AppService {
     });
   }
 
-  @Cron("*/60 * * * * *")
+  @Cron("*/10 * * * * *")
   async pullCloudData() {
     if (!AppService.warehouseId) {
       console.log("No WareHouse ID is defined, please define WareHouse ID through API.");
