@@ -297,7 +297,7 @@ export class AppService {
       const lastDataReceivedDiff = currentDate.diff(lastDataReceivedTime, 'seconds');
       console.log(element.compartment, 'data received time ', lastDataReceivedDiff);
 
-      if (lastDataReceivedDiff > 60) {
+      if (lastDataReceivedDiff > 15) {
         element.smartenable = false;
       } else {
         element.smartenable = true;
@@ -305,11 +305,12 @@ export class AppService {
 
       const lastFeedbackReqDiff = currentDate.diff(element.lastFeedbackReqTime, 'seconds');
       console.log(element.compartment, 'feedback time ', lastFeedbackReqDiff);
-      if (lastFeedbackReqDiff > 15) {
+      if (lastFeedbackReqDiff > 60) {
         element.feedbackBox = false;
       } else {
         element.feedbackBox = true;
       }
+      console.log(element.feedbackBox);
 
       await element.save();
     });
