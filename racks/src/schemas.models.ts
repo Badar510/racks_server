@@ -9,7 +9,7 @@ export const RackSchema = new mongoose.Schema(
         boxstate: { type: String, required: false },
         status: { type: Boolean, required: false, default: false },
         relayBox: { type: Boolean, required: false, default: true },
-        feedbackBox: { type: Boolean, required: false, default: false },
+        feedbackBox: { type: Boolean, required: false, default: true },
         smartenable: { type: Boolean, required: false, default: false },
 
         liveBoxstate: { type: String, required: false },

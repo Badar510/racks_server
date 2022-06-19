@@ -291,12 +291,7 @@ export class AppService {
         element.status = false;
       }
 
-      const lastDataReceivedTime = moment(element.lastDataReceivedTime);
-      console.log(lastDataReceivedTime);
-
-      const lastDataReceivedDiff = currentDate.diff(lastDataReceivedTime, 'seconds');
-      console.log(element.compartment, 'data received time ', lastDataReceivedDiff);
-
+      const lastDataReceivedDiff = currentDate.diff(element.lastDataReceivedTime, 'seconds');
       if (lastDataReceivedDiff > 15) {
         element.smartenable = false;
       } else {
@@ -304,14 +299,11 @@ export class AppService {
       }
 
       const lastFeedbackReqDiff = currentDate.diff(element.lastFeedbackReqTime, 'seconds');
-      console.log(element.compartment, 'feedback time ', lastFeedbackReqDiff);
       if (lastFeedbackReqDiff > 60) {
         element.feedbackBox = false;
       } else {
         element.feedbackBox = true;
       }
-      console.log(element.feedbackBox);
-
       await element.save();
     });
   }
