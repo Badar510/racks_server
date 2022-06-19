@@ -335,7 +335,6 @@ export class AppService {
           const compartmentObj = await this.racksModel.findOne({ compartment: eachData['compartment'] }).exec();
           if (compartmentObj) {
             compartmentObj.lastDataReceivedTime = currentDate;
-            compartmentObj.lastFeedbackReqTime = currentDate;
             const overRideTimeDiff = moment(currentDate).diff(moment(compartmentObj.manualOverRideTime), 'seconds');
             if (overRideTimeDiff <= 0 || overRideTimeDiff > compartmentObj.manualOverRideTimeout) {
               compartmentObj.code = eachData['code'];
