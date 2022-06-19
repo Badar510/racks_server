@@ -12,6 +12,7 @@ const axios = require('axios').default;
 @Injectable()
 export class AppService {
   static warehouseId: string;
+  static serverIP: string;
   static serverNum: number;
   constructor(
     @InjectModel('rack-schema') private readonly racksModel,
@@ -32,6 +33,7 @@ export class AppService {
       console.error(err);
       console.log("No WareHouse ID is defined, please define WareHouse ID through API.");
     }
+    this.updateServerForeignIp();
     this.pullCloudData();
   }
 
@@ -412,7 +414,11 @@ export class AppService {
         }
       );
     });
-
+    // compartmentsArr.push({
+    //   "server": {
+    //     "ip": AppService.serverIP
+    //   }
+    // });
     const data = JSON.stringify(compartmentsArr);
 
     axios({
@@ -429,6 +435,23 @@ export class AppService {
       .catch(function (error) {
         console.log("Data cannot be pushed to cloud");
       });
+  }
 
+
+  @Cron('*/5  * * * *')
+  async updateServerForeignIp() {
+    axios({
+      method: 'get',
+      url: `https://api.ipify.org/?format=json`,
+    })
+      .then(function (response) {
+        if (response.data) {
+          AppService.serverIP = response.data.ip;
+        }
+        console.log("Server Foreign IP", AppService.serverIP);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
   }
 }
