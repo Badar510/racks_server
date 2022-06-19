@@ -1,11 +1,12 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { HttpException } from '@nestjs/common';
-const axios = require('axios').default;
 import moment = require('moment');
 import { Cron } from '@nestjs/schedule';
 let internetDown = false;
-const fs = require('fs');
+import * as fs from 'fs';
+const axios = require('axios').default;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 @Injectable()
@@ -28,6 +29,7 @@ export class AppService {
       AppService.warehouseId = configs["warehouseId"];
       console.log("Server Started, WareHouse ID: " + configs["warehouseId"]);
     } catch (err) {
+      console.error(err);
       console.log("No WareHouse ID is defined, please define WareHouse ID through API.");
     }
     this.pullCloudData();
@@ -45,7 +47,7 @@ export class AppService {
           compartmentObj.status = true;
           compartmentObj.relayBox = relayBox;
           await compartmentObj.save();
-          const numCompartment = parseInt(compartment.split("-")[1])
+          const numCompartment = parseInt(compartment.split("-")[1]);
           if (numCompartment >= 1 && numCompartment <= 6) {
             AppService.serverNum = 1;
           } else {
@@ -130,8 +132,7 @@ export class AppService {
           }
           const currentDate = moment();
           compartmentObj.liveBoxstate = boxstate;
-          compartmentObj.lastSeen = currentDate;
-          compartmentObj.status = true;
+          compartmentObj.lastFeedbackReqTime = currentDate;
           await compartmentObj.save();
         }
         if (status == 'occupied' || status == 'available')
@@ -186,7 +187,8 @@ export class AppService {
     if (status == 'available') {
       side = 'picker';
     }
-    const options = {
+
+    axios({
       url: 'https://api.airliftgrocer.com/compartment/status',
       method: 'PUT',
       headers: {
@@ -201,9 +203,7 @@ export class AppService {
         "side": side,
         // "byAdmin": true
       },
-    };
-    //console.log(options);
-    axios(options)
+    })
       .then(response => {
         // console.log(response);
         console.log("Event log Success: compartment " + compartment + " updated PUT API, Status: " + status + "  ,side: " + side);
@@ -247,7 +247,7 @@ export class AppService {
       }
     });
     if (compartmentsStatusArray && compartmentsStatusArray.length) {
-      const options = {
+      axios({
         url: 'https://api.airliftgrocer.com/compartment/warehouses/tags/status',
         method: 'PATCH',
         headers: {
@@ -258,8 +258,7 @@ export class AppService {
         data: {
           compartmentsStatusArray: compartmentsStatusArray
         },
-      };
-      axios(options)
+      })
         .then(response => {
           console.log("Patch API Success");
           // console.log(response);
@@ -289,8 +288,22 @@ export class AppService {
       } else {
         element.status = false;
       }
+
+      const lastDataReceivedDiff = currentDate.diff(element.lastDataReceivedTime, 'seconds');
+      if (lastDataReceivedDiff > 30) {
+        element.smartenable = false;
+      } else {
+        element.smartenable = true;
+      }
+
+      const lastFeedbackReqDiff = currentDate.diff(element.lastFeedbackReqTime, 'seconds');
+      if (lastFeedbackReqDiff > 30) {
+        element.feedbackBox = false;
+      } else {
+        element.feedbackBox = true;
+      }
+
       await element.save();
-      // console.log(element);
     });
   }
 
@@ -313,20 +326,16 @@ export class AppService {
         response.data.forEach(async eachData => {
           const compartmentObj = await this.racksModel.findOne({ compartment: eachData['compartment'] }).exec();
           if (compartmentObj) {
+            compartmentObj.lastDataReceivedTime = moment();
             const overRideTimeDiff = moment(currentDate).diff(moment(compartmentObj.manualOverRideTime), 'seconds');
-            // console.log(overRideTimeDiff);
             if (overRideTimeDiff <= 0 || overRideTimeDiff > compartmentObj.manualOverRideTimeout) {
-              // console. log("Pulling Cloud Data");
               compartmentObj.code = eachData['code'];
               compartmentObj.time = eachData['time'];
               compartmentObj.duration = eachData['duration'];
               compartmentObj.boxstate = eachData['boxstate'];
-              compartmentObj.smartenable = true;
-              await compartmentObj.save();
               // console.log('Updated');
-            } else {
-              // console.log('not pulling cloud data');
             }
+            await compartmentObj.save();
           } else {
             const data = new this.racksModel({
               compartment: eachData['compartment'],
@@ -334,7 +343,7 @@ export class AppService {
               time: eachData['time'],
               duration: eachData['duration'],
               boxstate: eachData['boxstate'],
-              smartenable: false
+              lastDataReceivedTime: moment()
             });
             await data.save();
             // console.log('Created new');
@@ -387,9 +396,9 @@ export class AppService {
     const compartmentsArr = [];
     LocalData.forEach(async element => {
       if (AppService.serverNum == 1 && parseInt(element.compartment.split("-")[1]) > 6) {
-        return
+        return;
       } else if (AppService.serverNum == 2 && parseInt(element.compartment.split("-")[1]) <= 6) {
-        return
+        return;
       }
       compartmentsArr.push(
         {
@@ -398,25 +407,22 @@ export class AppService {
           "code": element.code,
           "livestatedisplay": element.status,
           "livestaterelay": element.relayBox,
-          "livestatefeedback": "Working",
+          "livestatefeedback": element.feedbackBox,
           "smartenable": element.smartenable
         }
-      )
+      );
     });
 
-    var axios = require('axios');
-    var data = JSON.stringify(compartmentsArr);
+    const data = JSON.stringify(compartmentsArr);
 
-    var config = {
+    axios({
       method: 'post',
       url: `https://destratech.pythonanywhere.com/smartracks/cloud/${String(AppService.warehouseId)}/`,
       headers: {
         'Content-Type': 'application/json'
       },
       data: data
-    };
-
-    axios(config)
+    })
       .then(function (response) {
         console.log("Data pushed to cloud");
       })
