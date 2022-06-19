@@ -292,7 +292,7 @@ export class AppService {
       const lastDataReceivedDiff = currentDate.diff(element.lastDataReceivedTime, 'seconds');
       console.log(element.compartment, 'data received time ', lastDataReceivedDiff);
 
-      if (lastDataReceivedDiff > 30 || lastDataReceivedDiff == 0) {
+      if (lastDataReceivedDiff > 30) {
         element.smartenable = false;
       } else {
         element.smartenable = true;
@@ -300,7 +300,7 @@ export class AppService {
 
       const lastFeedbackReqDiff = currentDate.diff(element.lastFeedbackReqTime, 'seconds');
       console.log(element.compartment, 'feedback time ', lastFeedbackReqDiff);
-      if (lastFeedbackReqDiff > 30 || lastDataReceivedDiff == 0) {
+      if (lastFeedbackReqDiff > 30) {
         element.feedbackBox = false;
       } else {
         element.feedbackBox = true;
