@@ -96,6 +96,7 @@ export class AppService {
           const boxstate = boxStatesObj.boxstate;
           compartmentObj.liveBoxstate = boxstate;
           compartmentObj.lastFeedbackReqTime = currentDate;
+          compartmentObj.feedback = true;
           await compartmentObj.save();
         }
       });
@@ -133,6 +134,7 @@ export class AppService {
           }
           compartmentObj.liveBoxstate = boxstate;
           compartmentObj.lastFeedbackReqTime = currentDate;
+          compartmentObj.feedback = true;
           await compartmentObj.save();
         }
         if (status == 'occupied' || status == 'available')
@@ -329,7 +331,8 @@ export class AppService {
         response.data.forEach(async eachData => {
           const compartmentObj = await this.racksModel.findOne({ compartment: eachData['compartment'] }).exec();
           if (compartmentObj) {
-            compartmentObj.lastDataReceivedTime = moment();
+            compartmentObj.lastDataReceivedTime = currentDate;
+            compartmentObj.lastFeedbackReqTime = currentDate;
             const overRideTimeDiff = moment(currentDate).diff(moment(compartmentObj.manualOverRideTime), 'seconds');
             if (overRideTimeDiff <= 0 || overRideTimeDiff > compartmentObj.manualOverRideTimeout) {
               compartmentObj.code = eachData['code'];
@@ -346,7 +349,8 @@ export class AppService {
               time: eachData['time'],
               duration: eachData['duration'],
               boxstate: eachData['boxstate'],
-              lastDataReceivedTime: moment()
+              lastDataReceivedTime: currentDate,
+              lastFeedbackReqTime: currentDate
             });
             await data.save();
             // console.log('Created new');
