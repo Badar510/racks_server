@@ -291,7 +291,10 @@ export class AppService {
         element.status = false;
       }
 
-      const lastDataReceivedDiff = currentDate.diff(element.lastDataReceivedTime, 'seconds');
+      const lastDataReceivedTime = moment(element.lastDataReceivedTime);
+      console.log(lastDataReceivedTime);
+
+      const lastDataReceivedDiff = currentDate.diff(lastDataReceivedTime, 'seconds');
       console.log(element.compartment, 'data received time ', lastDataReceivedDiff);
 
       if (lastDataReceivedDiff > 60) {
