@@ -33,7 +33,7 @@ export class AppService {
       console.error(err);
       console.log("No WareHouse ID is defined, please define WareHouse ID through API.");
     }
-    this.updateServerForeignIp();
+    // this.updateServerForeignIp();
     this.pullCloudData();
   }
 
@@ -275,7 +275,7 @@ export class AppService {
   }
 
   //60 Seconds to check if any compartment is active or inactive
-  @Cron("*/60 * * * * *")
+  @Cron("*/10 * * * * *")
   async updateCompartments() {
     const currentDate = moment();
     const allData = await this.racksModel.find().exec();
@@ -292,14 +292,17 @@ export class AppService {
       }
 
       const lastDataReceivedDiff = currentDate.diff(element.lastDataReceivedTime, 'seconds');
-      if (lastDataReceivedDiff > 30) {
+      console.log(element.compartment, 'data received time ', lastDataReceivedDiff);
+
+      if (lastDataReceivedDiff > 30 || lastDataReceivedDiff == 0) {
         element.smartenable = false;
       } else {
         element.smartenable = true;
       }
 
       const lastFeedbackReqDiff = currentDate.diff(element.lastFeedbackReqTime, 'seconds');
-      if (lastFeedbackReqDiff > 30) {
+      console.log(element.compartment, 'feedback time ', lastFeedbackReqDiff);
+      if (lastFeedbackReqDiff > 30 || lastDataReceivedDiff == 0) {
         element.feedbackBox = false;
       } else {
         element.feedbackBox = true;
@@ -438,20 +441,20 @@ export class AppService {
   }
 
 
-  @Cron('*/5  * * * *')
-  async updateServerForeignIp() {
-    axios({
-      method: 'get',
-      url: `https://api.ipify.org/?format=json`,
-    })
-      .then(function (response) {
-        if (response.data) {
-          AppService.serverIP = response.data.ip;
-        }
-        console.log("Server Foreign IP", AppService.serverIP);
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
-  }
+  // @Cron('*/5  * * * *')
+  // async updateServerForeignIp() {
+  //   axios({
+  //     method: 'get',
+  //     url: `https://api.ipify.org/?format=json`,
+  //   })
+  //     .then(function (response) {
+  //       if (response.data) {
+  //         AppService.serverIP = response.data.ip;
+  //       }
+  //       console.log("Server Foreign IP", AppService.serverIP);
+  //     })
+  //     .catch(function (error) {
+  //       console.log(error);
+  //     });
+  // }
 }
